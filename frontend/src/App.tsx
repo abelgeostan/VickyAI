@@ -6,7 +6,7 @@ import { modelService } from './services/modelService';
 import { chatService } from './services/chatService';
 import { User } from './types/auth';
 import { Conversation } from './types/conversation';
-import { Message } from './types/chat';
+import { Message, Attachment, AttachmentUploadResult } from './types/chat';
 import { ModelInfo } from './types/model';
 import { AppSettings, loadSettings, applyTheme } from './stores/settingsStore';
 
@@ -184,6 +184,7 @@ export const App: React.FC = () => {
   const handleSendMessage = async (
     textContent: string,
     attachmentIds: string[],
+    uploadedAttachments?: AttachmentUploadResult[],
     regenerateMsgId?: string
   ) => {
     if (!textContent.trim() && attachmentIds.length === 0) return;
@@ -195,8 +196,19 @@ export const App: React.FC = () => {
 
     const currentConvId = activeConvIdRef.current;
 
-    // Temporary optimistic user message
+    // Temporary optimistic user message with attachments
     const tempUserMsgId = `temp-${Date.now()}`;
+    const optimisticAttachments: Attachment[] = (uploadedAttachments || []).map((att) => ({
+      id: att.id,
+      message_id: tempUserMsgId,
+      filename: att.filename,
+      original_filename: att.original_filename,
+      mime_type: att.mime_type,
+      size: att.size,
+      url: att.url,
+      created_at: new Date().toISOString(),
+    }));
+
     const userMsg: Message = {
       id: tempUserMsgId,
       conversation_id: currentConvId || '',
@@ -204,6 +216,7 @@ export const App: React.FC = () => {
       content: textContent,
       model: selectedModel,
       created_at: new Date().toISOString(),
+      attachments: optimisticAttachments,
     };
 
     // Temporary optimistic assistant placeholder
@@ -279,6 +292,9 @@ export const App: React.FC = () => {
         isGeneratingRef.current = false;
         abortControllerRef.current = null;
         loadConversations();
+        if (activeConvIdRef.current) {
+          loadConversationMessages(activeConvIdRef.current);
+        }
       },
       onCancelled: () => {
         setMessages((prev) =>
@@ -343,9 +359,18 @@ export const App: React.FC = () => {
     }
 
     if (priorUserMsg) {
+      const priorAttachments = priorUserMsg.attachments || [];
       handleSendMessage(
         priorUserMsg.content,
-        (priorUserMsg.attachments || []).map((a) => a.id),
+        priorAttachments.map((a) => a.id),
+        priorAttachments.map((a) => ({
+          id: a.id,
+          filename: a.filename,
+          original_filename: a.original_filename,
+          mime_type: a.mime_type,
+          size: a.size,
+          url: a.url,
+        })),
         messageId
       );
     }
@@ -353,7 +378,21 @@ export const App: React.FC = () => {
 
   // Edit user message
   const handleEditUserMessage = (messageId: string, newContent: string) => {
-    handleSendMessage(newContent, [], messageId);
+    const priorUserMsg = messages.find((m) => m.id === messageId);
+    const priorAttachments = priorUserMsg?.attachments || [];
+    handleSendMessage(
+      newContent,
+      priorAttachments.map((a) => a.id),
+      priorAttachments.map((a) => ({
+        id: a.id,
+        filename: a.filename,
+        original_filename: a.original_filename,
+        mime_type: a.mime_type,
+        size: a.size,
+        url: a.url,
+      })),
+      messageId
+    );
   };
 
   // Filter conversations by search
@@ -394,15 +433,15 @@ export const App: React.FC = () => {
       />
 
       {/* Main Chat View */}
-      <main className="flex-1 flex flex-col h-full min-h-0 min-w-0 bg-white dark:bg-slate-950 overflow-hidden">
+      <main className="flex-1 flex flex-col h-full min-h-0 min-w-0 bg-surface-50/40 dark:bg-[#070b14] overflow-hidden">
         {/* Top Header */}
-        <header className="h-14 border-b border-slate-200 dark:border-slate-800/80 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md z-10">
+        <header className="h-14 border-b border-slate-200/80 dark:border-slate-800/60 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-white/70 dark:bg-[#070b14]/80 backdrop-blur-md z-10">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Hamburger on mobile */}
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Open sidebar"
             >
               <Menu className="w-5 h-5" />
@@ -418,21 +457,23 @@ export const App: React.FC = () => {
 
             {/* Active conversation title */}
             {activeConversation && (
-              <span className="hidden sm:inline-block text-xs font-semibold text-slate-400 dark:text-slate-500 truncate max-w-xs pl-2 border-l border-slate-200 dark:border-slate-800">
-                {activeConversation.title}
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 truncate max-w-xs pl-3 border-l border-slate-200 dark:border-slate-800">
+                <span className="truncate">{activeConversation.title}</span>
               </span>
             )}
           </div>
 
           {/* New Chat Top Button */}
-          <button
-            type="button"
-            onClick={handleNewChat}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Start new conversation"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleNewChat}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shadow-2xs"
+              title="Start new conversation"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
         </header>
 
         {/* Content: Welcome Screen or Message List */}

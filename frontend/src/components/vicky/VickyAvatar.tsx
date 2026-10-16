@@ -52,12 +52,12 @@ export const VickyAvatar: React.FC<VickyAvatarProps> = ({
       <div
         className={`relative w-full h-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border-2 transition-transform duration-300 ${
           isThinking
-            ? 'border-vicky-cyan shadow-[0_0_12px_rgba(6,182,212,0.4)] animate-bounce'
+            ? 'border-vicky-400 ring-2 ring-vicky-400/40 shadow-glow-sm'
             : isSad
             ? 'border-amber-400/80 shadow-sm'
             : isExcited
-            ? 'border-vicky-400 shadow-md scale-105'
-            : 'border-vicky-500/40 hover:border-vicky-500 shadow-sm'
+            ? 'border-vicky-400 shadow-glow-sm scale-105'
+            : 'border-vicky-500/30 hover:border-vicky-500/60 shadow-xs'
         }`}
       >
         <img

@@ -108,8 +108,32 @@ async def chat_stream(
                 try:
                     b64 = upload_service.encode_image_base64(att.storage_path)
                     base64_images.append(b64)
+                    logger.info(f"Loaded image base64 for attachment {att_id} ({len(b64)} chars)")
                 except Exception as e:
                     logger.error(f"Failed to load image for attachment {att_id}: {e}")
+            else:
+                # Disk fallback in case attachment row was created before DB commit
+                disk_path = upload_service.find_file_by_id(str(att_id))
+                if disk_path:
+                    try:
+                        b64 = upload_service.encode_image_base64(disk_path)
+                        base64_images.append(b64)
+                        logger.info(f"Loaded image base64 from disk fallback for {att_id} ({disk_path})")
+                        filename = os.path.basename(disk_path)
+                        file_stat = os.stat(disk_path)
+                        fallback_att = Attachment(
+                            id=att_id,
+                            message_id=None,
+                            filename=filename,
+                            original_filename=filename,
+                            mime_type="image/jpeg",
+                            size=file_stat.st_size,
+                            storage_path=disk_path,
+                        )
+                        db.add(fallback_att)
+                        attachments_to_process.append(fallback_att)
+                    except Exception as e:
+                        logger.error(f"Failed disk fallback for {att_id}: {e}")
 
     # 3. Handle regeneration if requested
     if req.regenerate_message_id:
@@ -117,11 +141,15 @@ async def chat_stream(
         if regen_msg and regen_msg.conversation_id == conv.id:
             await msg_repo.delete_messages_from(conv.id, regen_msg.created_at)
 
+    user_prompt = (req.message or "").strip()
+    if not user_prompt and base64_images:
+        user_prompt = "Please analyze this image and describe what you see."
+
     # 4. Save user message in PostgreSQL
     user_msg = await msg_repo.create(
         conversation_id=conv.id,
         role="user",
-        content=req.message,
+        content=user_prompt,
         model=active_model,
     )
 
@@ -144,9 +172,10 @@ async def chat_stream(
         })
 
     # Add current user message with images if present
-    current_payload = {"role": "user", "content": req.message}
+    current_payload = {"role": "user", "content": user_prompt}
     if base64_images:
         current_payload["images"] = base64_images
+        logger.info(f"Streaming chat with {len(base64_images)} image(s) to Ollama model {active_model}")
     ollama_messages.append(current_payload)
 
     # 6. Stream generator

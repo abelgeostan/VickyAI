@@ -11,7 +11,7 @@ class Attachment(Base):
     __tablename__ = "attachments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=False, index=True)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=True, index=True)
     filename = Column(String(255), nullable=False)  # Safe generated storage filename e.g. uuid.png
     original_filename = Column(String(255), nullable=False)
     mime_type = Column(String(100), nullable=False)

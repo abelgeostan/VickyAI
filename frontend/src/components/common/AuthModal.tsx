@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, AlertCircle, Loader2 } from 'lucide-react';
-
+import { LogIn, UserPlus, AlertCircle, Loader2, Mail, Lock, User as UserIcon, Sparkles } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { User } from '../../types/auth';
 import { vickyBrand } from '../../assets/vicky';
@@ -52,32 +51,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8">
-        {/* Mascot Avatar & Title */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">
+      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-modal p-6 sm:p-8 animate-slide-up">
+        {/* Mascot Header */}
         <div className="text-center mb-6 select-none">
-          <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-vicky-400 shadow-md">
-            <img
-              src={vickyBrand.avatarCircle}
-              alt="VickyAI Mascot"
-              className="w-full h-full object-cover"
-            />
+          <div className="relative inline-block mb-3">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-vicky-500/40 shadow-glow-sm mx-auto">
+              <img
+                src={vickyBrand.avatarCircle}
+                alt="VickyAI"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-gradient-brand text-white text-[9px] font-bold shadow-sm flex items-center gap-0.5">
+              <Sparkles className="w-2.5 h-2.5" /> AI
+            </span>
           </div>
+
           <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
-            <span>VickyAI</span>
-            <span className="text-vicky-500">🐾</span>
+            <span>Vicky<span className="text-vicky-500">AI</span></span>
+            <span className="text-base">🐾</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isRegister
-              ? 'Create your local VickyAI account'
-              : 'Sign in to access your local AI companion'}
+              ? 'Create your local account on your server'
+              : 'Sign in to access your local AI assistant'}
           </p>
         </div>
 
-        {/* Error notice */}
+        {/* Tab Switcher */}
+        <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800/80 p-1 mb-5">
+          <button
+            type="button"
+            onClick={() => { setIsRegister(false); setError(null); }}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              !isRegister
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsRegister(true); setError(null); }}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              isRegister
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Create Account
+          </button>
+        </div>
+
+        {/* Error Callout */}
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="mb-4 p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs flex items-start gap-2 animate-fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
             <span>{error}</span>
           </div>
         )}
@@ -87,68 +118,80 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           {isRegister ? (
             <>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Email
                 </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500 text-slate-900 dark:text-slate-100"
-                />
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500/40 text-slate-900 dark:text-slate-100 transition-all placeholder:text-slate-400"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Username
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="vicky_lover"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500 text-slate-900 dark:text-slate-100"
-                />
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="vicky_user"
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500/40 text-slate-900 dark:text-slate-100 transition-all placeholder:text-slate-400"
+                  />
+                </div>
               </div>
             </>
           ) : (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Email or Username
               </label>
-              <input
-                type="text"
-                required
-                value={emailOrUsername}
-                onChange={(e) => setEmailOrUsername(e.target.value)}
-                placeholder="Username or email"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500 text-slate-900 dark:text-slate-100"
-              />
+              <div className="relative">
+                <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={emailOrUsername}
+                  onChange={(e) => setEmailOrUsername(e.target.value)}
+                  placeholder="Username or email address"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500/40 text-slate-900 dark:text-slate-100 transition-all placeholder:text-slate-400"
+                />
+              </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Password
             </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500 text-slate-900 dark:text-slate-100"
-            />
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-vicky-500/40 text-slate-900 dark:text-slate-100 transition-all placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 px-4 rounded-xl bg-vicky-600 hover:bg-vicky-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition-all duration-150 disabled:opacity-50 mt-4"
+            className="w-full py-2.5 px-4 rounded-xl bg-vicky-600 hover:bg-vicky-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow transition-all duration-150 disabled:opacity-50 mt-4"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -165,22 +208,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
             )}
           </button>
         </form>
-
-        {/* Toggle Mode */}
-        <div className="mt-5 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegister(!isRegister);
-              setError(null);
-            }}
-            className="text-xs text-vicky-600 dark:text-vicky-400 hover:underline font-medium"
-          >
-            {isRegister
-              ? 'Already have an account? Sign in'
-              : "Don't have an account? Register"}
-          </button>
-        </div>
       </div>
     </div>
   );
