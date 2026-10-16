@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check, RotateCw, Edit3, User as UserIcon, Brain, AlertCircle } from 'lucide-react';
 import { Message } from '../../types/chat';
 import { VickyAvatar } from '../vicky/VickyAvatar';
 import { CodeBlock } from './CodeBlock';
 import { ImageAttachmentPreview } from './ImageAttachmentPreview';
+
+const extractText = (node: any): string => {
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (!node) return '';
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (node.props && node.props.children) return extractText(node.props.children);
+  return '';
+};
 
 interface MessageItemProps {
   message: Message;
@@ -168,20 +176,29 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               ) : (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeHighlight]}
                   components={{
-                    code({ inline, className, children, ...props }: any) {
+                    pre({ children }: any) {
+                      const child = React.isValidElement(children)
+                        ? children
+                        : Array.isArray(children)
+                        ? children[0]
+                        : null;
+                      const childProps: any = (child as any)?.props || {};
+                      const className = childProps.className || '';
+                      const match = /language-(\w+)/.exec(className);
+                      const lang = match ? match[1] : 'text';
+                      const rawCode = extractText(childProps.children).replace(/\n$/, '');
+                      return <CodeBlock language={lang} value={rawCode} />;
+                    },
+                    code({ className, children, ...props }: any) {
                       const match = /language-(\w+)/.exec(className || '');
-                      const codeValue = String(children).replace(/\n$/, '');
-                      if (!inline && match) {
-                        return <CodeBlock language={match[1]} value={codeValue} />;
-                      }
-                      if (!inline && codeValue.includes('\n')) {
-                        return <CodeBlock language="text" value={codeValue} />;
+                      if (match) {
+                        const raw = extractText(children).replace(/\n$/, '');
+                        return <CodeBlock language={match[1]} value={raw} />;
                       }
                       return (
                         <code
-                          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-vicky-600 dark:text-vicky-400 font-mono text-xs"
+                          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-vicky-600 dark:text-vicky-400 font-mono text-xs font-medium"
                           {...props}
                         >
                           {children}
