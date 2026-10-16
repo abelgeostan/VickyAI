@@ -52,5 +52,17 @@ class UploadService:
         with open(storage_path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
+    def find_file_by_id(self, file_id: str) -> str | None:
+        """Find file on disk by file UUID prefix in case of uncommitted DB attachment."""
+        str_id = str(file_id)
+        if not os.path.isdir(self.upload_dir):
+            return None
+        for fname in os.listdir(self.upload_dir):
+            if fname.startswith(str_id):
+                full_path = os.path.join(self.upload_dir, fname)
+                if os.path.isfile(full_path):
+                    return full_path
+        return None
+
 
 upload_service = UploadService()

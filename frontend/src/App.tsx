@@ -6,7 +6,7 @@ import { modelService } from './services/modelService';
 import { chatService } from './services/chatService';
 import { User } from './types/auth';
 import { Conversation } from './types/conversation';
-import { Message } from './types/chat';
+import { Message, Attachment, AttachmentUploadResult } from './types/chat';
 import { ModelInfo } from './types/model';
 import { AppSettings, loadSettings, applyTheme } from './stores/settingsStore';
 
@@ -184,6 +184,7 @@ export const App: React.FC = () => {
   const handleSendMessage = async (
     textContent: string,
     attachmentIds: string[],
+    uploadedAttachments?: AttachmentUploadResult[],
     regenerateMsgId?: string
   ) => {
     if (!textContent.trim() && attachmentIds.length === 0) return;
@@ -195,8 +196,19 @@ export const App: React.FC = () => {
 
     const currentConvId = activeConvIdRef.current;
 
-    // Temporary optimistic user message
+    // Temporary optimistic user message with attachments
     const tempUserMsgId = `temp-${Date.now()}`;
+    const optimisticAttachments: Attachment[] = (uploadedAttachments || []).map((att) => ({
+      id: att.id,
+      message_id: tempUserMsgId,
+      filename: att.filename,
+      original_filename: att.original_filename,
+      mime_type: att.mime_type,
+      size: att.size,
+      url: att.url,
+      created_at: new Date().toISOString(),
+    }));
+
     const userMsg: Message = {
       id: tempUserMsgId,
       conversation_id: currentConvId || '',
@@ -204,6 +216,7 @@ export const App: React.FC = () => {
       content: textContent,
       model: selectedModel,
       created_at: new Date().toISOString(),
+      attachments: optimisticAttachments,
     };
 
     // Temporary optimistic assistant placeholder
@@ -279,6 +292,9 @@ export const App: React.FC = () => {
         isGeneratingRef.current = false;
         abortControllerRef.current = null;
         loadConversations();
+        if (activeConvIdRef.current) {
+          loadConversationMessages(activeConvIdRef.current);
+        }
       },
       onCancelled: () => {
         setMessages((prev) =>
@@ -343,9 +359,18 @@ export const App: React.FC = () => {
     }
 
     if (priorUserMsg) {
+      const priorAttachments = priorUserMsg.attachments || [];
       handleSendMessage(
         priorUserMsg.content,
-        (priorUserMsg.attachments || []).map((a) => a.id),
+        priorAttachments.map((a) => a.id),
+        priorAttachments.map((a) => ({
+          id: a.id,
+          filename: a.filename,
+          original_filename: a.original_filename,
+          mime_type: a.mime_type,
+          size: a.size,
+          url: a.url,
+        })),
         messageId
       );
     }
@@ -353,7 +378,21 @@ export const App: React.FC = () => {
 
   // Edit user message
   const handleEditUserMessage = (messageId: string, newContent: string) => {
-    handleSendMessage(newContent, [], messageId);
+    const priorUserMsg = messages.find((m) => m.id === messageId);
+    const priorAttachments = priorUserMsg?.attachments || [];
+    handleSendMessage(
+      newContent,
+      priorAttachments.map((a) => a.id),
+      priorAttachments.map((a) => ({
+        id: a.id,
+        filename: a.filename,
+        original_filename: a.original_filename,
+        mime_type: a.mime_type,
+        size: a.size,
+        url: a.url,
+      })),
+      messageId
+    );
   };
 
   // Filter conversations by search

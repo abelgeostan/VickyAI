@@ -6,7 +6,7 @@ import { ImageAttachmentPreview } from './ImageAttachmentPreview';
 import { ModelInfo } from '../../types/model';
 
 interface ComposerProps {
-  onSendMessage: (message: string, attachmentIds: string[]) => void;
+  onSendMessage: (message: string, attachmentIds: string[], uploadedAttachments?: AttachmentUploadResult[]) => void;
   onStopGeneration: () => void;
   isGenerating: boolean;
   selectedModel: string;
@@ -48,7 +48,7 @@ export const Composer: React.FC<ComposerProps> = ({
   const handleSend = () => {
     if (isGenerating) { onStopGeneration(); return; }
     if (!canSend) return;
-    onSendMessage(text.trim(), attachments.map((a) => a.id));
+    onSendMessage(text.trim(), attachments.map((a) => a.id), attachments);
     setText('');
     setAttachments([]);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
