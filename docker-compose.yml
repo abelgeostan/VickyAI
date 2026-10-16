@@ -1,0 +1,83 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: vickyai_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vickyai}
+      POSTGRES_USER: ${POSTGRES_USER:-vickyai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vickyai} -d ${POSTGRES_DB:-vickyai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vickyai-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vickyai_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vickyai}
+      POSTGRES_USER: ${POSTGRES_USER:-vickyai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://vickyai:change_this_password@postgres:5432/vickyai}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://localhost:11434}
+      JWT_SECRET: ${JWT_SECRET:-change_this_jwt_secret_in_production}
+      UPLOAD_DIR: /app/uploads
+      MAX_UPLOAD_SIZE_MB: 10
+      ENVIRONMENT: production
+    volumes:
+      - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - vickyai-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vickyai_frontend
+    restart: always
+    networks:
+      - vickyai-network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: vickyai_nginx
+    restart: always
+    ports:
+      - "${PORT:-3080}:80"
+
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - vickyai-network
+
+networks:
+  vickyai-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads_data:
+    driver: local

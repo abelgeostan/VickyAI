@@ -1,0 +1,38 @@
+# Environment files (DO NOT COMMIT SECRETS)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node & Frontend Build Artifacts
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+*.local
+
+# Persistent uploads (never commit uploaded user images)
+uploads/*
+!uploads/.gitkeep
+
+# System & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Log files
+*.log
