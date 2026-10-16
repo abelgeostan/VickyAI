@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ZoomIn } from 'lucide-react';
+import { X, ZoomIn, ExternalLink } from 'lucide-react';
 
 interface ImageAttachmentPreviewProps {
   url: string;
@@ -25,21 +25,23 @@ export const ImageAttachmentPreview: React.FC<ImageAttachmentPreviewProps> = ({
   return (
     <>
       <div
-        className={`relative group inline-block rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm ${sizeClasses[size]}`}
+        className={`relative group inline-block rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700/60 bg-slate-100 dark:bg-slate-800 shadow-xs hover:shadow-card transition-all duration-200 ease-spring ${sizeClasses[size]}`}
       >
         <img
           src={url}
           alt={filename}
-          className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-200"
+          className="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition-transform duration-300"
           onClick={() => setModalOpen(true)}
         />
 
-        {/* Hover zoom icon */}
+        {/* Hover zoom overlay */}
         <div
           onClick={() => setModalOpen(true)}
-          className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity text-white"
+          className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity duration-200 text-white"
         >
-          <ZoomIn className="w-5 h-5" />
+          <div className="p-1.5 rounded-full bg-white/20 backdrop-blur-md">
+            <ZoomIn className="w-4 h-4" />
+          </div>
         </div>
 
         {/* Remove button if editing/composing */}
@@ -50,36 +52,53 @@ export const ImageAttachmentPreview: React.FC<ImageAttachmentPreviewProps> = ({
               e.stopPropagation();
               onRemove();
             }}
-            className="absolute top-1 right-1 p-1 bg-black/60 hover:bg-black/90 text-white rounded-full transition-colors z-10"
+            className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-red-600 text-white rounded-full transition-colors z-10 shadow-sm"
             title="Remove attachment"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3 h-3" />
           </button>
         )}
       </div>
 
-      {/* Full Size Modal */}
+      {/* Full Size Lightbox Modal */}
       {modalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
           onClick={() => setModalOpen(false)}
         >
           <div
-            className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl p-2"
+            className="relative max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden bg-white/10 dark:bg-slate-900/90 border border-white/20 dark:border-slate-700/60 shadow-modal p-3 animate-slide-up flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setModalOpen(false)}
-              className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 text-white rounded-full transition-colors z-10"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center justify-between pb-2 px-2 text-white">
+              <span className="text-xs font-medium truncate max-w-xs text-slate-300">{filename}</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  download={filename}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition-colors"
+                  title="Open original"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition-colors"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
             <img
               src={url}
               alt={filename}
-              className="max-w-full max-h-[82vh] object-contain rounded-lg mx-auto"
+              className="max-w-full max-h-[78vh] object-contain rounded-2xl mx-auto shadow-2xl"
             />
-            <p className="mt-2 text-center text-xs text-slate-400 truncate px-4">{filename}</p>
           </div>
         </div>
       )}
