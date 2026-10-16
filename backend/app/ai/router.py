@@ -5,8 +5,8 @@ from app.schemas.model import ModelInfo
 KNOWN_MODELS: Dict[str, dict] = {
     "gemma3:4b": {
         "name": "Gemma 3 4B",
-        "badge": "Fast • General • Vision",
-        "description": "Google's lightweight, multimodal model. Optimized for lightning-fast answers and image analysis.",
+        "badge": "Fast • Vision",
+        "description": "Fast multimodal model for chat and vision analysis.",
         "supports_vision": True,
         "supports_thinking": False,
         "icon": "⚡",
@@ -14,8 +14,8 @@ KNOWN_MODELS: Dict[str, dict] = {
     },
     "qwen3:4b": {
         "name": "Qwen 3 4B",
-        "badge": "Reasoning • Coding • Agentic",
-        "description": "Alibaba's advanced reasoning model. Excellent at code synthesis, deep logic, and complex problem solving.",
+        "badge": "Reasoning • Coding",
+        "description": "Deep reasoning model for code and complex logic.",
         "supports_vision": False,
         "supports_thinking": True,
         "icon": "🧠",
