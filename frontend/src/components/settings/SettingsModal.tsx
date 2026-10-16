@@ -246,7 +246,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Enter to Send
                     </h4>
                     <p className="text-[11px] text-slate-500">
-                      Press Enter to send, Shift+Enter for new line.
+                      Press Enter to send messages immediately.
                     </p>
                   </div>
                   <input

@@ -188,7 +188,7 @@ export const Composer: React.FC<ComposerProps> = ({
                 ? 'Vicky is generating response...'
                 : hasImagesAttached
                 ? 'Ask a question about this image...'
-                : 'Message VickyAI... (Shift+Enter for new line)'
+                : 'Message VickyAI...'
             }
             className="flex-1 max-h-48 resize-none bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none leading-relaxed py-1.5"
           />
