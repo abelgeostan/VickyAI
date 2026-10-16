@@ -105,7 +105,7 @@ export const Composer: React.FC<ComposerProps> = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 pb-4 sm:pb-6">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 pb-3 sm:pb-6 shrink-0">
       {/* Vision Warning Banner if image attached to non-vision model */}
       {showVisionWarning && (
         <div className="mb-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between gap-2 shadow-sm animate-in fade-in">

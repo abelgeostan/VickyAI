@@ -366,7 +366,7 @@ export const App: React.FC = () => {
   const activeConversation = conversations.find((c) => c.id === activeConvId);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white dark:bg-slate-950 font-sans">
+    <div className="flex h-screen h-[100dvh] w-screen overflow-hidden bg-white dark:bg-slate-950 font-sans">
       {/* Auth Modal if unauthenticated */}
       {authChecked && !user && (
         <AuthModal onSuccess={(authenticatedUser) => setUser(authenticatedUser)} />
@@ -394,7 +394,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Chat View */}
-      <main className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-950">
+      <main className="flex-1 flex flex-col h-full min-h-0 min-w-0 bg-white dark:bg-slate-950 overflow-hidden">
         {/* Top Header */}
         <header className="h-14 border-b border-slate-200 dark:border-slate-800/80 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md z-10">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
