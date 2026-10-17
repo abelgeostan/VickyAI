@@ -4,6 +4,14 @@ export interface User {
   username: string;
   created_at: string;
   last_login?: string;
+  is_admin?: boolean;
+}
+
+export const ADMIN_EMAIL = 'abel@kalayil.com';
+
+export function isUserAdmin(user: User | null | undefined): boolean {
+  if (!user) return false;
+  return Boolean(user.is_admin || user.email?.trim().toLowerCase() === ADMIN_EMAIL);
 }
 
 export interface Token {

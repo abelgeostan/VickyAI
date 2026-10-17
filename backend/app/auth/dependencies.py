@@ -58,3 +58,19 @@ async def get_current_user(
         )
 
     return user
+
+
+ADMIN_EMAILS = {"abel@kalayil.com"}
+
+
+async def get_current_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Enforces that the authenticated user possesses admin privileges."""
+    if not current_user.email or current_user.email.strip().lower() not in ADMIN_EMAILS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Admin privileges required.",
+        )
+    return current_user
+

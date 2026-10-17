@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, computed_field
 
 
 class UserRegister(BaseModel):
@@ -23,6 +23,11 @@ class UserResponse(BaseModel):
     last_login: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def is_admin(self) -> bool:
+        return self.email.strip().lower() == "abel@kalayil.com"
 
 
 

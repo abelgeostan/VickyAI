@@ -1,7 +1,7 @@
 import React from 'react';
-import { Plus, Search, Settings, LogOut, X } from 'lucide-react';
+import { Plus, Search, Settings, LogOut, X, Shield } from 'lucide-react';
 import { Conversation } from '../../types/conversation';
-import { User } from '../../types/auth';
+import { User, isUserAdmin } from '../../types/auth';
 import { ConversationList } from './ConversationList';
 import { vickyBrand } from '../../assets/vicky';
 
@@ -20,6 +20,8 @@ interface SidebarProps {
   onOpenSettings: () => void;
   user: User | null;
   onLogout: () => void;
+  isAdmin?: boolean;
+  onOpenAdmin?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -37,7 +39,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenSettings,
   user,
   onLogout,
+  isAdmin,
+  onOpenAdmin,
 }) => {
+  const adminActive = isAdmin ?? isUserAdmin(user);
   return (
     <>
       {/* Backdrop */}
@@ -139,6 +144,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onDelete={onDeleteConversation}
         />
 
+        {/* ── Admin Dashboard Button (Only for Admin) ── */}
+        {adminActive && (
+          <div className="px-3 pt-2 pb-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => { onOpenAdmin?.(); onClose(); }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60 text-xs font-semibold shadow-xs transition-all duration-150 group"
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
+                <span>Admin Dashboard</span>
+              </div>
+              <span className="text-[10px] font-bold font-mono px-1.5 py-0.2 rounded-md bg-purple-200/80 dark:bg-purple-900/80 text-purple-800 dark:text-purple-200">
+                Admin
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* ── Footer ── */}
         <div className="shrink-0 px-3 py-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-surface-50/80 dark:bg-[#0c111d]/80">
           <div className="flex items-center gap-2">
@@ -155,6 +179,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </p>
             </div>
             <div className="flex items-center gap-0.5 shrink-0">
+              {adminActive && (
+                <button
+                  type="button"
+                  onClick={onOpenAdmin}
+                  className="p-1.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 transition-colors"
+                  title="Admin Dashboard"
+                >
+                  <Shield className="w-4 h-4" />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onOpenSettings}

@@ -4,7 +4,7 @@ import { authService } from './services/authService';
 import { conversationService } from './services/conversationService';
 import { modelService } from './services/modelService';
 import { chatService } from './services/chatService';
-import { User } from './types/auth';
+import { User, isUserAdmin } from './types/auth';
 import { Conversation } from './types/conversation';
 import { Message, Attachment, AttachmentUploadResult } from './types/chat';
 import { ModelInfo } from './types/model';
@@ -17,6 +17,7 @@ import { Composer } from './components/chat/Composer';
 import { WelcomeScreen } from './components/chat/WelcomeScreen';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { AuthModal } from './components/common/AuthModal';
+import { AdminDashboardModal } from './components/admin/AdminDashboardModal';
 
 
 export const App: React.FC = () => {
@@ -31,7 +32,10 @@ export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(loadSettings());
+
+  const isAdmin = isUserAdmin(user);
 
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -426,6 +430,8 @@ export const App: React.FC = () => {
         onSearchChange={setSearchQuery}
         onOpenSettings={() => setIsSettingsOpen(true)}
         user={user}
+        isAdmin={isAdmin}
+        onOpenAdmin={() => setIsAdminOpen(true)}
         onLogout={() => {
           authService.logout();
           setUser(null);
@@ -515,6 +521,15 @@ export const App: React.FC = () => {
           setUser(null);
         }}
       />
+
+      {/* Admin Dashboard Modal */}
+      {isAdmin && (
+        <AdminDashboardModal
+          isOpen={isAdminOpen}
+          onClose={() => setIsAdminOpen(false)}
+          currentUser={user}
+        />
+      )}
     </div>
   );
 };

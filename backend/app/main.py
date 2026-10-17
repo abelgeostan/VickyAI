@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
 from app.middleware.error_handler import SafeErrorMiddleware
-from app.routers import auth, conversations, messages, chat, models, uploads, health
+from app.routers import auth, conversations, messages, chat, models, uploads, health, admin
 
 # Configure structured logging
 logging.basicConfig(
@@ -59,6 +59,7 @@ app.include_router(chat.router, prefix="/api")
 app.include_router(models.router, prefix="/api")
 app.include_router(uploads.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 
 @app.get("/")
