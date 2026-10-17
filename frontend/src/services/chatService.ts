@@ -120,7 +120,7 @@ export const chatService = {
                 params.onCancelled?.();
                 break;
               case 'error':
-                params.onError?.(parsed.error || 'Generation error', parsed.code);
+                params.onError?.(parsed.detail || parsed.error || 'Generation error', parsed.code);
                 break;
             }
           } catch (e) {

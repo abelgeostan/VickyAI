@@ -1,139 +1,214 @@
-# VickyAI 🐾 | Your Personal Local AI Companion
+# VickyAI 🐾 | Your Private Local AI Companion
 
-![VickyAI Logo](frontend/src/assets/vicky/vicky_logo.png)
+<div align="center">
 
-> **VickyAI** is a ChatGPT-like personal AI assistant service running locally on your home LAN, featuring **Vicky the yellow Labrador** as the mascot and visual identity.
+<img src="frontend/src/assets/vicky/vicky_logo.png" alt="VickyAI Logo" width="180" style="border-radius: 2rem; margin-bottom: 1rem;" />
+
+### A private, self-hosted AI companion inspired by Vicky the yellow Labrador.
+**Runs 100% locally on your home network — zero cloud telemetry, lightning fast, and multimodal.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-24.0+-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Ollama](https://img.shields.io/badge/Powered%20by-Ollama-black.svg?logo=ollama&logoColor=white)](https://ollama.com/)
+
+[**Quick Start**](#-quick-start-in-3-steps) • [**Features**](#-features) • [**Architecture**](#-architecture) • [**Configuration**](#-configuration) • [**Troubleshooting**](#-troubleshooting--faq)
+
+</div>
 
 ---
 
-## 🌟 Highlights
+## 🌟 Overview
 
-- **🐶 VickyAI Avatar System**: Dynamic facial expressions and activity scenes cropped directly from the master character sheet (Happy, Thinking, Sad, Excited, Curious, Wink, Laugh, Confused, Waving, Coding, Reading, Sleeping).
-- **⚡ Dual AI Engine Architecture**:
-  - **Gemma 3 4B**: Fast, lightweight, general-purpose conversations & multimodal image/vision analysis.
-  - **Qwen 3 4B**: Deep reasoning, code synthesis, logic, and agent-ready planning.
-- **🌊 Progressive SSE Streaming**: Unbuffered Server-Sent Events with stop generation control and real-time token rendering.
-- **🖼️ Multimodal Vision**: Drag-and-drop and image attachments (PNG, JPEG, WEBP up to 10MB) with model capability validation.
-- **💾 PostgreSQL Persistence**: Real-time message storage, conversation branch editing, archiving, and debounced full-text search.
-- **🔐 Local Authentication**: Secure bcrypt password hashing, JWT session authorization, and multi-user data isolation.
-- **🎨 Modern ChatGPT-Style UI**: Desktop, tablet, and mobile responsive with Light, Dark, and System theme support.
-- **🐳 Full Docker Deployment**: Fully containerized stack with healthchecks, persistent volumes, and Nginx reverse proxy.
-- **🚀 Future Agent Architecture**: Tool registry, role permissions, approval requests, and audit logging.
+**VickyAI** transforms your home server or local machine into a private, ChatGPT/Claude-grade AI workstation. It connects seamlessly to **Ollama** running on your local network (LAN) or host machine, providing a sleek, responsive, and friendly conversational interface with persistent chat history, multimodal image analysis, and deep code reasoning.
+
+Whether running on a dedicated home server, a GPU workstation, or a mini PC, your conversations and image uploads **never leave your private network**.
+
+---
+
+## 🐶 Features
+
+### 🎨 Modern, Premium Interface
+- **Living Mascot Identity**: Vicky reacts dynamically to conversations with 12 distinct facial expressions (Happy, Thinking, Curious, Excited, Wink, etc.) and activity scenes (Coding, Reading, Brainstorming, Sleeping).
+- **Interactive Home Screen**: Tap Vicky to cycle through activity modes, enjoy ambient floating particles, and filter quick prompts with category tabs.
+- **ChatGPT-Inspired UX**: Clean sidebar navigation, real-time debounced conversation search, archive & rename management, and multi-line markdown rendering.
+- **Mobile First & Responsive**: Clamped, touch-friendly UI designed for phones, tablets, and wide desktop screens. Includes auto-closing mobile drawers and a responsive model selector.
+- **Theme Engine**: Seamless switching between **Dark**, **Light**, and **System** themes.
+
+### ⚡ Dual-Engine Intelligence
+- **Gemma 3 4B**: Fast, lightweight general conversational assistant optimized for rapid answers and multimodal image analysis.
+- **Qwen 3 4B**: Advanced reasoning engine equipped for deep logic, complex code generation, debugging, and step-by-step thinking breakdown.
+- **Dynamic Model Discovery**: Automatically discovers any additional models installed in your Ollama library on startup.
+
+### 👁️ True Multimodal Vision
+- **Drag & Drop / File Picker**: Upload images (PNG, JPEG, WEBP) directly into the composer.
+- **Image Previews & Lightbox**: Interactive thumbnails with full-screen lightbox modal and zoom capabilities.
+- **Permanent Attachment Persistence**: Images are securely hashed with UUIDs, stored on disk, linked to PostgreSQL message records, and delivered to vision-capable models via base64 encoding.
+
+### 🌊 Real-Time Streaming & Code Intelligence
+- **Unbuffered SSE Streaming**: Real-time word-by-word token generation with immediate stop controls (`AbortController`).
+- **Syntax Highlighting**: Pre-configured code blocks supporting Python, JavaScript, TypeScript, SQL, Bash, HTML/CSS, JSON, and YAML with one-click clipboard copying.
+- **Performance Telemetry**: Live generation time, token counters, and model attribution chips on every assistant reply.
+
+### 🔒 Enterprise Security & Isolation
+- **100% Private & Self-Hosted**: Zero third-party cloud API dependencies.
+- **Bcrypt Password Security**: Passwords hashed with salted bcrypt (12 rounds).
+- **JWT Authentication**: Secure Bearer tokens with isolated user namespaces (users can only access their own conversations and files).
+- **Path Traversal Protection**: Uploaded files undergo MIME inspection, Pillow integrity verification, and safe UUID storage.
 
 ---
 
 ## 📐 Architecture
 
-The application runs on the host server (**VICKY/MSI**) and communicates over the local network (LAN) with the external **Acer AI machine** hosting Ollama with a dedicated GTX 1650 Ti GPU:
+VickyAI uses a containerized multi-tier microservices architecture orchestrated via Docker Compose:
 
 ```
-Browser (Desktop / Mobile)
-        ↓
-    Nginx (Port 3080)
-  ┌─────┴────────────────────────┐
-  ↓                              ↓
-Frontend (React + Vite)      Backend (FastAPI)
-                                 ↓
-                            PostgreSQL 16
-                                 ↓
-                     Ollama REST API over LAN
-                                 ↓
-                     Acer: 192.168.1.24:11434
-                                 ↓
-                     ┌───────────┴───────────┐
-                     ↓                       ↓
-                 Gemma 3 4B              Qwen 3 4B
-               (Vision/Fast)         (Reasoning/Code)
+┌────────────────────────────────────────────────────────┐
+│               Client (Desktop / Mobile)               │
+└───────────────────────────┬────────────────────────────┘
+                            │ HTTP (Port 3080)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                   Nginx Reverse Proxy                  │
+│       - Static assets caching                          │
+│       - Unbuffered SSE streaming proxy                 │
+│       - File upload size limits (15MB)                 │
+└───────────────┬────────────────────────┬───────────────┘
+                │                        │
+       /api/*   ▼               /*       ▼
+┌────────────────────────┐      ┌────────────────────────┐
+│     FastAPI Backend    │      │  React + Vite Frontend │
+│  - Python 3.12 async   │      │  - Tailwind CSS        │
+│  - SQLAlchemy (Async)  │      │  - Lucide Icons        │
+│  - Alembic migrations  │      │  - Highlight.js        │
+└───────────┬────────────┘      └────────────────────────┘
+            │
+            ├──────────────────────────┐
+            ▼                          ▼
+┌────────────────────────┐   ┌───────────────────────────┐
+│     PostgreSQL 16      │   │   Ollama Host (Over LAN)  │
+│  - Users & auth        │   │   - GTX / RTX GPU / CPU   │
+│  - Conversations       │   │   - http://<IP>:11434     │
+│  - Messages & images   │   │   - Gemma 3 4B & Qwen 3 4B│
+└────────────────────────┘   └───────────────────────────┘
 ```
 
-> [!IMPORTANT]
-> **Ollama runs OUTSIDE of Docker** on the Acer AI machine to directly utilize the physical GPU. VickyAI connects to Ollama over the local network via `OLLAMA_BASE_URL`.
+> [!TIP]
+> **Why run Ollama outside Docker?**
+> Running Ollama on the host machine (or on a dedicated GPU server on your LAN) allows it to directly utilize your physical GPU (NVIDIA CUDA, Apple Metal, or AMD ROCm) without complex containerized GPU passthrough.
 
 ---
 
 ## 📋 Prerequisites
 
-- **Docker** 24.0+ and **Docker Compose** v2+
-- Network access to the Ollama host (default: `http://192.168.1.24:11434`)
-- Both models pulled on Ollama:
-  ```bash
-  ollama pull gemma3:4b
-  ollama pull qwen3:4b
-  ```
+Before deploying VickyAI, ensure you have:
+
+1. **Docker & Docker Compose**:
+   - Docker 24.0+
+   - Docker Compose v2+
+2. **Ollama Instance**:
+   - Running locally or on a machine on your LAN.
+   - Models pulled:
+     ```bash
+     ollama pull gemma3:4b
+     ollama pull qwen3:4b
+     ```
+   - Ensure Ollama allows LAN connections by setting `OLLAMA_HOST=0.0.0.0:11434`.
 
 ---
 
-## 🚀 Quick Start (Production Mode)
+## 🚀 Quick Start in 3 Steps
 
-### 1. Configure Environment
-Copy `.env.example` to `.env`:
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/abelgeostan/VickyAI.git
+cd VickyAI
+```
+
+### Step 2: Configure Environment Variables
+Copy the template configuration:
 ```bash
 cp .env.example .env
 ```
 
-Ensure `OLLAMA_BASE_URL` points to your Ollama machine and set your chosen port (defaults to `3080`):
+Open `.env` and configure your Ollama endpoint and desired port:
 ```env
-OLLAMA_BASE_URL=http://192.168.1.24:11434
+# Port to expose VickyAI on your host / home server
 PORT=3080
+
+# Address of your Ollama machine (LAN IP or host.docker.internal)
+OLLAMA_BASE_URL=http://192.168.1.24:11434
+
+# Secret key for JWT session tokens (generate a strong random string)
+JWT_SECRET_KEY=change_this_to_a_secure_random_string_in_production
 ```
 
-### 2. Start the Application
-Build and start all containers in the background:
+### Step 3: Launch with Docker Compose
 ```bash
 docker compose up -d --build
 ```
 
-### 3. Check Service Status
-```bash
-docker compose ps
-```
-
-All 4 services will report `healthy` or `Up`:
-- `vickyai_nginx` (Port `3080`)
-- `vickyai_frontend` (Port `3000` internal)
-- `vickyai_backend` (Port `8000` internal)
-- `vickyai_postgres` (Port `5432` internal)
-
-### 4. Access VickyAI
-Open your web browser and navigate to:
+That's it! Open your browser and visit:
 ```
 http://localhost:3080
 ```
-or from another device on your LAN:
-```
-http://<VICKY-SERVER-IP>:3080
-```
-
+*(Or from any phone, laptop, or tablet on your network: `http://<your-server-ip>:3080`)*
 
 ---
 
-## 🛠️ Docker Operations
+## ⚙️ Configuration Reference
 
-| Command | Description |
-|---|---|
-| `docker compose up -d --build` | Build images and start all services in background |
-| `docker compose ps` | Check container health and running status |
-| `docker compose logs -f` | Tail logs across all services |
-| `docker compose logs -f backend` | View backend logs and API requests |
-| `docker compose restart` | Restart all application containers |
-| `docker compose down` | Stop and remove application containers |
-| `docker compose down -v` | Stop containers and wipe PostgreSQL/upload volumes |
+All settings can be customized in `.env`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3080` | External port exposed by Nginx on your host machine |
+| `OLLAMA_BASE_URL` | `http://192.168.1.24:11434` | Network URL where Ollama is reachable |
+| `POSTGRES_USER` | `vickyai` | PostgreSQL database username |
+| `POSTGRES_PASSWORD` | `vickyai_secure_pass` | PostgreSQL database password |
+| `POSTGRES_DB` | `vickyai` | PostgreSQL database name |
+| `JWT_SECRET_KEY` | *(auto-generated)* | Cryptographic secret for signing auth tokens |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `10080` | Session lifetime (defaults to 7 days) |
+| `DEFAULT_MODEL` | `gemma3:4b` | Default model selected for new conversations |
 
 ---
 
-## 🧪 Testing & Verification
+## 🛠️ Docker Management & Cheat Sheet
 
-### 1. Test Ollama Reachability from Docker
-Verify that the backend container can reach the Acer machine over LAN:
 ```bash
-docker compose exec backend curl -s http://192.168.1.24:11434/api/tags
+# View running containers and health status
+docker compose ps
+
+# Follow logs across all containers
+docker compose logs -f
+
+# Follow backend logs specifically
+docker compose logs -f backend
+
+# Rebuild and restart after pulling code updates
+docker compose up -d --build
+
+# Restart all services
+docker compose restart
+
+# Gracefully stop the application
+docker compose down
+
+# Stop and wipe database data / persistent volumes (caution!)
+docker compose down -v
 ```
-You should see JSON listing `gemma3:4b` and `qwen3:4b`.
 
-### 2. Health Endpoint
-Inspect the combined health check:
+---
+
+## 🧪 Testing & Health Verification
+
+### Check Stack Health
+Query the health check endpoint from any terminal:
 ```bash
-curl http://localhost/api/health
+curl http://localhost:3080/api/health
 ```
 Expected output:
 ```json
@@ -144,117 +219,101 @@ Expected output:
 }
 ```
 
-### 3. Running Backend Unit & Integration Tests
-Run pytest in the project directory:
+### Test Vision Pipeline
+To verify end-to-end multimodal image upload, database persistence, and vision analysis with Gemma:
 ```bash
-pytest backend/app/tests -v
+python verify_vision.py
 ```
-Test suite verifies:
-- User registration, duplicate checks, login, and JWT authentication
-- Multi-user isolation (User B cannot access or modify User A's conversations)
-- Conversation creation, listing, updating, archiving, and deletion
-- Model listing and capability metadata (Vision & Thinking flags)
-- Image upload validation (PNG, JPEG, WEBP, size limits)
-- External Ollama LAN connectivity
+
+### Interactive API Documentation
+FastAPI provides automatic interactive OpenAPI documentation:
+- **Swagger UI**: `http://localhost:3080/docs`
+- **ReDoc**: `http://localhost:3080/redoc`
 
 ---
 
-## 💡 Model Capabilities & Guidelines
-
-| Model | Badge | Capabilities | Best Used For |
-|---|---|---|---|
-| **Gemma 3 4B** | ⚡ Fast • General • Vision | Completion, Multimodal Vision | Everyday queries, quick answers, analyzing attached images |
-| **Qwen 3 4B** | 🧠 Reasoning • Coding • Agentic | Completion, Tools, Thinking | Python/JS programming, complex algorithms, mathematical proofs |
-
-> [!NOTE]
-> If you attach an image while **Qwen 3 4B** is selected, VickyAI will display a helpful banner advising you to switch to **Gemma 3 4B**. The application will never send image data to incompatible models.
-
----
-
-## 🔒 Security & Data Isolation
-
-- **Password Security**: Passwords are encrypted using salted bcrypt hashing with 12 rounds. Plaintext passwords are never logged or stored.
-- **Upload Safety**: Files undergo MIME validation and Pillow integrity checks. Filenames are assigned random UUIDs to eliminate path traversal attacks.
-- **Safe Error Responses**: Internal stack traces and database credentials are obfuscated from the UI.
-- **User Data Isolation**: Queries strictly enforce `user_id` ownership filters on conversations, messages, and attachments.
-
----
-
-## 🧭 Project Layout
+## 🧭 Project Structure
 
 ```
-vickyai/
-├── docker-compose.yml          # Container configuration
-├── .env.example                # Environment variables template
-├── README.md                   # Complete documentation
+VickyAI/
+├── docker-compose.yml              # Multi-container orchestration definition
+├── .env.example                    # Environment configuration template
+├── README.md                       # Documentation
+├── verify_vision.py                # Automated multimodal vision verification script
 ├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── alembic.ini
-│   ├── alembic/                # Database migrations
+│   ├── Dockerfile                  # Python 3.12 slim container
+│   ├── requirements.txt            # Python dependencies (FastAPI, SQLAlchemy, etc.)
+│   ├── alembic.ini                 # Database migration configuration
+│   ├── alembic/                    # Auto-applied database schema migrations
 │   └── app/
-│       ├── main.py             # FastAPI entrypoint
-│       ├── config.py           # Pydantic Settings
-│       ├── database.py         # Async SQLAlchemy & asyncpg
-│       ├── models/             # User, Conversation, Message, Attachment
-│       ├── schemas/            # Pydantic validation schemas
-│       ├── routers/            # Auth, Chat, Conversations, Models, Uploads, Health
-│       ├── services/           # OllamaService, AuthService, ConversationService, UploadService
-│       ├── repositories/       # UserRepo, ConversationRepo, MessageRepo
-│       ├── ai/                 # ModelRouter & Future Agent Architecture
-│       ├── auth/               # JWT utilities & FastAPI dependencies
-│       └── tests/              # Pytest test suite
+│       ├── main.py                 # FastAPI application factory
+│       ├── config.py               # Pydantic environment validation
+│       ├── database.py             # Async database engine & session pool
+│       ├── models/                 # SQLAlchemy ORM models (User, Conv, Message, Attachment)
+│       ├── schemas/                # Pydantic request/response schemas
+│       ├── routers/                # API routers (auth, chat, conversations, models, uploads)
+│       ├── services/               # Core business services (Ollama, Upload, Auth, Chat)
+│       └── repositories/           # Database access layer
 ├── frontend/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
+│   ├── Dockerfile                  # Multi-stage production build container
+│   ├── package.json                # Dependencies (React 18, Vite, Lucide, Tailwind)
+│   ├── tailwind.config.js          # Custom theme, brand gradients, and animation keyframes
 │   └── src/
-│       ├── assets/vicky/       # Master sheet & cropped avatar poses
+│       ├── assets/vicky/           # Vicky character art, emotions & activity scenes
 │       ├── components/
-│       │   ├── chat/           # Composer, MessageList, ModelSelector, WelcomeScreen
-│       │   ├── sidebar/        # Sidebar, ConversationList, ConversationItem
-│       │   ├── vicky/          # VickyAvatar, VickyScene, VickyStatusBadge
-│       │   └── settings/       # SettingsModal
-│       ├── services/           # api, auth, chat (SSE), conversation, upload, model
-│       └── stores/             # settingsStore (Light/Dark/System themes)
+│       │   ├── chat/               # MessageList, Composer, ModelSelector, WelcomeScreen
+│       │   ├── sidebar/            # Conversation drawer, history items, search
+│       │   ├── settings/           # Theme toggle, defaults & user preferences
+│       │   └── common/             # AuthModal & UI primitives
+│       ├── services/               # Axios/Fetch clients & SSE streaming handlers
+│       └── stores/                 # Client-side settings & theme state
 └── nginx/
-    ├── Dockerfile
-    └── nginx.conf              # Streaming SSE proxy configuration
+    ├── Dockerfile                  # Nginx reverse proxy image
+    └── nginx.conf                  # Optimized proxy with unbuffered SSE streaming
 ```
 
 ---
 
-## 🐾 Mascot & Avatar Asset Guide
+## ❓ Troubleshooting & FAQ
 
-Vicky the yellow Labrador is represented with 12 distinct avatar emotions and 6 activity scenes extracted from the master asset sheet:
+### Q: Ollama reports "connection refused" or "disconnected".
+**A:** By default, Ollama only listens on `127.0.0.1` (localhost). To allow other machines or Docker containers to connect:
+1. **Linux (systemd)**: Edit `/etc/systemd/system/ollama.service.d/override.conf` and add:
+   ```ini
+   [Service]
+   Environment="OLLAMA_HOST=0.0.0.0:11434"
+   ```
+   Then reload and restart: `sudo systemctl daemon-reload && sudo systemctl restart ollama`.
+2. **Windows**: Set a system environment variable `OLLAMA_HOST` with value `0.0.0.0:11434`, then restart Ollama from the system tray.
+3. **macOS**: In Terminal, run `launchctl setenv OLLAMA_HOST "0.0.0.0:11434"`, then restart Ollama.
 
-- **Happy**: Standard cheerful assistant messages
-- **Thinking**: Displayed when the model is reasoning or streaming
-- **Sad**: Displayed when an error or network drop occurs
-- **Excited**: Congratulatory and success states
-- **Curious**: Clarifications and exploratory questions
-- **Waving**: Welcome and onboarding screen
-- **Coding**: Technical developer advice and code analysis
-- **Reading**: Research, learning, and in-depth conceptual summaries
+### Q: Can I run VickyAI and Ollama on the exact same computer?
+**A:** Yes! In your `.env` file, set:
+```env
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+Docker will route requests directly to your host machine's Ollama port.
+
+### Q: Can I expose VickyAI to the internet?
+**A:** Yes. Because VickyAI includes built-in authentication, JWT sessions, and isolated user stores, you can securely expose port `3080` through Cloudflare Tunnels, Tailscale, WireGuard, or a reverse proxy like Caddy/Traefik with HTTPS.
+
+### Q: Can I add other models like Llama 3, DeepSeek, or Mistral?
+**A:** Absolutely. Pull any model in Ollama:
+```bash
+ollama pull llama3.2
+ollama pull deepseek-r1:7b
+```
+When you refresh VickyAI, the model selector will automatically discover them and display them in the AI engine dropdown.
 
 ---
 
-## 🛠️ Local Development (Without Docker)
+## 📄 License
 
-### Backend:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Or `venv\Scripts\activate` on Windows
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
+This project is licensed under the [MIT License](LICENSE) — feel free to use, modify, and deploy it for personal and commercial applications.
 
-### Frontend:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open `http://localhost:3000`.
+---
+
+<div align="center">
+  <b>Built with ❤️ for privacy, local AI, and happy pups everywhere.</b><br/>
+  <i>🐾 Vicky is always ready to chat!</i>
+</div>
