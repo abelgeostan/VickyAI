@@ -40,10 +40,15 @@ class AuthService:
 
     async def login(self, req: UserLogin) -> Token:
         user = await self.repo.get_by_email_or_username(req.email_or_username)
-        if not user or not verify_password(req.password, user.password_hash):
+        if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email/username or password",
+                detail="User not found. Please check your username or create an account.",
+            )
+        if not verify_password(req.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect password. Please try again.",
             )
 
         access_token = create_access_token({"sub": str(user.id), "username": user.username})
