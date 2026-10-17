@@ -46,8 +46,7 @@ export const Composer: React.FC<ComposerProps> = ({
   }, [text]);
 
   const handleSend = () => {
-    if (isGenerating) { onStopGeneration(); return; }
-    if (!canSend) return;
+    if (isGenerating || !canSend) return;
     onSendMessage(text.trim(), attachments.map((a) => a.id), attachments);
     setText('');
     setAttachments([]);
@@ -57,7 +56,9 @@ export const Composer: React.FC<ComposerProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (enterToSend && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (!isGenerating && canSend) {
+        handleSend();
+      }
     }
   };
 
@@ -143,7 +144,7 @@ export const Composer: React.FC<ComposerProps> = ({
           {/* Attach button */}
           <button
             type="button"
-            disabled={isGenerating || isUploading}
+            disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
             className="shrink-0 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all disabled:opacity-40"
             title="Attach image"
@@ -162,15 +163,12 @@ export const Composer: React.FC<ComposerProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={isGenerating}
             placeholder={
-              isGenerating
-                ? 'Vicky is thinking...'
-                : hasImagesAttached
+              hasImagesAttached
                 ? 'Ask about this image...'
                 : 'Message VickyAI...'
             }
-            className="flex-1 min-h-[36px] max-h-48 resize-none bg-transparent text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none leading-relaxed py-2 disabled:opacity-60"
+            className="flex-1 min-h-[36px] max-h-48 resize-none bg-transparent text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none leading-relaxed py-2"
           />
 
           {/* Send / Stop Button */}
@@ -178,11 +176,11 @@ export const Composer: React.FC<ComposerProps> = ({
             <button
               type="button"
               onClick={onStopGeneration}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold shadow-sm transition-all"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 active:scale-95 text-white text-xs font-bold shadow-sm transition-all"
               title="Stop generation"
             >
               <Square className="w-3.5 h-3.5 fill-white" />
-              <span className="hidden sm:inline">Stop</span>
+              <span>Stop</span>
             </button>
           ) : (
             <button
@@ -190,7 +188,7 @@ export const Composer: React.FC<ComposerProps> = ({
               disabled={!canSend}
               onClick={handleSend}
               className={`
-                shrink-0 p-2 rounded-xl transition-all duration-150 shadow-sm
+                shrink-0 p-2 rounded-xl transition-all duration-150 shadow-sm active:scale-95
                 ${canSend
                   ? 'bg-vicky-600 hover:bg-vicky-700 text-white shadow-glow-sm hover:shadow-glow'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-400 shadow-none cursor-not-allowed'
