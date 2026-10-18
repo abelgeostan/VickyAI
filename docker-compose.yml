@@ -37,6 +37,11 @@ services:
       UPLOAD_DIR: /app/uploads
       MAX_UPLOAD_SIZE_MB: 10
       ENVIRONMENT: production
+      SEARCH_PROVIDER: ${SEARCH_PROVIDER:-duckduckgo}
+      SEARCH_MAX_RESULTS: ${SEARCH_MAX_RESULTS:-5}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      BRAVE_API_KEY: ${BRAVE_API_KEY:-}
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-}
     volumes:
       - uploads_data:/app/uploads
     healthcheck:

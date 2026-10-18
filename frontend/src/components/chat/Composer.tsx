@@ -143,50 +143,8 @@ export const Composer: React.FC<ComposerProps> = ({
           </div>
         )}
 
-        {/* Input Row */}
-        <div className="flex items-end gap-2 p-2 sm:p-2.5">
-          {/* Attach button */}
-          <button
-            type="button"
-            disabled={isUploading}
-            onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all disabled:opacity-40"
-            title="Attach image"
-          >
-            {isUploading
-              ? <Loader2 className="w-5 h-5 animate-spin text-vicky-500" />
-              : <Paperclip className="w-5 h-5" />
-            }
-          </button>
-          <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleFileChange} />
-
-          {/* Web Search Toggle Button */}
-          <button
-            type="button"
-            onClick={() => onToggleWebSearch?.(!webSearchEnabled)}
-            className={`
-              shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 select-none border mb-0.5
-              ${webSearchEnabled
-                ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border-sky-300/80 dark:border-sky-800 shadow-2xs hover:bg-sky-100/60'
-                : 'text-slate-400 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80'
-              }
-            `}
-            title={
-              webSearchEnabled
-                ? 'Web Search is ON: VickyAI will search the web for up-to-date information'
-                : 'Web Search is OFF: Click to enable real-time web search'
-            }
-          >
-            <Globe className={`w-4 h-4 shrink-0 transition-transform ${webSearchEnabled ? 'text-sky-500 scale-105' : ''}`} />
-            <span className="hidden sm:inline text-[11px] font-semibold">
-              {webSearchEnabled ? 'Search ON' : 'Search'}
-            </span>
-            {webSearchEnabled && (
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-            )}
-          </button>
-
-          {/* Textarea */}
+        {/* Textarea Area */}
+        <div className="px-3 pt-2.5 pb-1">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -198,15 +156,67 @@ export const Composer: React.FC<ComposerProps> = ({
                 ? 'Ask about this image...'
                 : 'Message VickyAI...'
             }
-            className="flex-1 min-h-[36px] max-h-48 resize-none bg-transparent text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none leading-relaxed py-2"
+            className="w-full min-h-[40px] max-h-48 resize-none bg-transparent text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none leading-relaxed"
           />
+        </div>
+
+        {/* Bottom Action Bar */}
+        <div className="flex items-center justify-between px-2.5 pb-2 pt-1 border-t border-slate-100/80 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40">
+          <div className="flex items-center gap-2">
+            {/* Attach button */}
+            <button
+              type="button"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all disabled:opacity-40"
+              title="Attach image"
+            >
+              {isUploading
+                ? <Loader2 className="w-4 h-4 animate-spin text-vicky-500" />
+                : <Paperclip className="w-4 h-4" />
+              }
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleFileChange} />
+
+            {/* Prominent Web Search Toggle Pill */}
+            <button
+              type="button"
+              onClick={() => onToggleWebSearch?.(!webSearchEnabled)}
+              className={`
+                inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-150 select-none border shadow-2xs active:scale-95 cursor-pointer
+                ${webSearchEnabled
+                  ? 'bg-sky-500 hover:bg-sky-600 text-white border-sky-400 shadow-sky-500/20'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }
+              `}
+              title={
+                webSearchEnabled
+                  ? 'Web Search is ON: VickyAI will search the web for live information'
+                  : 'Web Search is OFF: Click to enable real-time web search'
+              }
+            >
+              <Globe className={`w-3.5 h-3.5 ${webSearchEnabled ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+              <span className="font-semibold text-[11px]">Web Search</span>
+              <span
+                className={`
+                  px-1.5 py-0.5 rounded-full text-[9px] font-bold font-mono transition-colors
+                  ${webSearchEnabled
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                  }
+                `}
+              >
+                {webSearchEnabled ? 'ON' : 'OFF'}
+              </span>
+            </button>
+          </div>
 
           {/* Send / Stop Button */}
           {isGenerating ? (
             <button
               type="button"
               onClick={onStopGeneration}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 active:scale-95 text-white text-xs font-bold shadow-sm transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500 hover:bg-red-600 active:scale-95 text-white text-xs font-bold shadow-sm transition-all"
               title="Stop generation"
             >
               <Square className="w-3.5 h-3.5 fill-white" />
@@ -218,10 +228,10 @@ export const Composer: React.FC<ComposerProps> = ({
               disabled={!canSend}
               onClick={handleSend}
               className={`
-                shrink-0 p-2 rounded-xl transition-all duration-150 shadow-sm active:scale-95
+                p-2 rounded-xl transition-all duration-150 shadow-sm active:scale-95
                 ${canSend
                   ? 'bg-vicky-600 hover:bg-vicky-700 text-white shadow-glow-sm hover:shadow-glow'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 shadow-none cursor-not-allowed'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 shadow-none cursor-not-allowed'
                 }
               `}
               title="Send message"

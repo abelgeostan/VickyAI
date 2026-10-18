@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Plus } from 'lucide-react';
+import { Menu, Plus, Globe } from 'lucide-react';
 import { authService } from './services/authService';
 import { conversationService } from './services/conversationService';
 import { modelService } from './services/modelService';
@@ -503,6 +503,38 @@ export const App: React.FC = () => {
               onSelectModel={setSelectedModel}
               disabled={isGenerating}
             />
+
+            {/* Header Web Search Toggle Pill */}
+            <button
+              type="button"
+              onClick={() => handleToggleWebSearch(!webSearchEnabled)}
+              className={`
+                hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 select-none border shadow-2xs active:scale-95 cursor-pointer
+                ${webSearchEnabled
+                  ? 'bg-sky-500 hover:bg-sky-600 text-white border-sky-400 shadow-sky-500/20'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }
+              `}
+              title={
+                webSearchEnabled
+                  ? 'Web Search is ON: VickyAI will search the web for live information'
+                  : 'Web Search is OFF: Click to enable real-time web search'
+              }
+            >
+              <Globe className={`w-3.5 h-3.5 ${webSearchEnabled ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+              <span className="font-semibold text-[11px]">Web Search</span>
+              <span
+                className={`
+                  px-1.5 py-0.2 rounded-full text-[9px] font-bold font-mono transition-colors
+                  ${webSearchEnabled
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                  }
+                `}
+              >
+                {webSearchEnabled ? 'ON' : 'OFF'}
+              </span>
+            </button>
 
             {/* Active conversation title */}
             {activeConversation && (
