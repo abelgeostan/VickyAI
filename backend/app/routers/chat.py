@@ -23,6 +23,7 @@ from app.services.conversation_service import ConversationService
 from app.repositories.conversation_repo import ConversationRepository
 from app.repositories.message_repo import MessageRepository
 from app.ai.router import ModelRouter
+from app.services.search import web_search_service
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger("vickyai.chat")
@@ -204,15 +205,35 @@ async def chat_stream(
         collected_content = []
         token_count = 0
         assistant_msg_id = uuid.uuid4()
+        sources_data = None
+        effective_system_prompt = VICKY_SYSTEM_PROMPT
 
         # Emit start event
         yield f"event: start\ndata: {json.dumps({'conversation_id': str(conv.id), 'user_message_id': str(user_msg.id), 'assistant_message_id': str(assistant_msg_id), 'model': active_model})}\n\n"
+
+        # Optional Web Search
+        if req.web_search and user_prompt:
+            yield f"event: search_start\ndata: {json.dumps({'query': user_prompt})}\n\n"
+            try:
+                search_results = await web_search_service.perform_search(user_prompt)
+                if search_results:
+                    sources_data = [
+                        {"title": r.title, "url": r.url, "snippet": r.snippet}
+                        for r in search_results
+                    ]
+                yield f"event: search_complete\ndata: {json.dumps({'query': user_prompt, 'sources': sources_data or []})}\n\n"
+                effective_system_prompt = VICKY_SYSTEM_PROMPT + web_search_service.build_search_prompt_context(
+                    user_prompt, search_results
+                )
+            except Exception as se:
+                logger.error(f"Web search error in stream: {se}")
+                yield f"event: search_complete\ndata: {json.dumps({'query': user_prompt, 'sources': []})}\n\n"
 
         try:
             async for chunk in ollama_service.stream_chat(
                 model=active_model,
                 messages=ollama_messages,
-                system_prompt=VICKY_SYSTEM_PROMPT,
+                system_prompt=effective_system_prompt,
             ):
                 # Check if client disconnected
                 if await raw_request.is_disconnected():
@@ -249,6 +270,7 @@ async def chat_stream(
                         model=active_model,
                         token_count=eval_count,
                         generation_time=gen_time,
+                        sources=sources_data,
                     )
 
                     # Auto generate conversation title if initial message
@@ -261,7 +283,7 @@ async def chat_stream(
                         except Exception as e:
                             logger.warning(f"Title generation error: {e}")
 
-                    yield f"event: complete\ndata: {json.dumps({'conversation_id': str(conv.id), 'assistant_message_id': str(assistant_msg_id), 'title': title, 'token_count': eval_count, 'generation_time': gen_time})}\n\n"
+                    yield f"event: complete\ndata: {json.dumps({'conversation_id': str(conv.id), 'assistant_message_id': str(assistant_msg_id), 'title': title, 'token_count': eval_count, 'generation_time': gen_time, 'sources': sources_data})}\n\n"
                     return
 
         except asyncio.CancelledError:
@@ -275,6 +297,7 @@ async def chat_stream(
                     model=active_model,
                     token_count=token_count,
                     generation_time=round(time.time() - start_time, 2),
+                    sources=sources_data,
                 )
             yield f"event: cancelled\ndata: {json.dumps({'status': 'cancelled'})}\n\n"
 
@@ -322,12 +345,29 @@ async def chat_non_stream(
         model=active_model,
     )
 
+    sources_data = None
+    effective_system_prompt = VICKY_SYSTEM_PROMPT
+
+    if req.web_search and req.message:
+        try:
+            search_results = await web_search_service.perform_search(req.message)
+            if search_results:
+                sources_data = [
+                    {"title": r.title, "url": r.url, "snippet": r.snippet}
+                    for r in search_results
+                ]
+            effective_system_prompt = VICKY_SYSTEM_PROMPT + web_search_service.build_search_prompt_context(
+                req.message, search_results
+            )
+        except Exception as e:
+            logger.error(f"Web search error in non-stream: {e}")
+
     t0 = time.time()
     try:
         res = await ollama_service.chat(
             model=active_model,
             messages=[{"role": "user", "content": req.message}],
-            system_prompt=VICKY_SYSTEM_PROMPT,
+            system_prompt=effective_system_prompt,
         )
         assistant_content = res.get("message", {}).get("content", "")
         eval_count = res.get("eval_count", 0)
@@ -345,6 +385,7 @@ async def chat_non_stream(
         model=active_model,
         token_count=eval_count,
         generation_time=gen_time,
+        sources=sources_data,
     )
 
     if conv.title == "New Conversation":

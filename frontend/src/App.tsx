@@ -34,6 +34,18 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(loadSettings());
+  const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(
+    () => localStorage.getItem('vickyai_web_search') === 'true'
+  );
+
+  const handleToggleWebSearch = (enabled: boolean) => {
+    setWebSearchEnabled(enabled);
+    try {
+      localStorage.setItem('vickyai_web_search', String(enabled));
+    } catch {
+      // ignore
+    }
+  };
 
   const isAdmin = isUserAdmin(user);
 
@@ -234,6 +246,8 @@ export const App: React.FC = () => {
       created_at: new Date().toISOString(),
       isStreaming: true,
       isThinking: true,
+      isSearching: webSearchEnabled,
+      searchQuery: webSearchEnabled ? textContent : undefined,
     };
 
     setMessages((prev) => [...prev, userMsg, assistantPlaceholder]);
@@ -244,13 +258,39 @@ export const App: React.FC = () => {
       model: selectedModel,
       attachmentIds,
       regenerateMessageId: regenerateMsgId,
+      webSearch: webSearchEnabled,
       signal: controller.signal,
       onStart: (data) => {
         activeConvIdRef.current = data.conversation_id;
         setActiveConvId(data.conversation_id);
         loadConversations();
       },
-
+      onSearchStart: (data) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempAssistantMsgId
+              ? {
+                  ...m,
+                  isSearching: true,
+                  searchQuery: data.query,
+                }
+              : m
+          )
+        );
+      },
+      onSearchComplete: (data) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempAssistantMsgId
+              ? {
+                  ...m,
+                  isSearching: false,
+                  sources: data.sources,
+                }
+              : m
+          )
+        );
+      },
       onReasoning: (data) => {
         setMessages((prev) =>
           prev.map((m) =>
@@ -271,6 +311,7 @@ export const App: React.FC = () => {
               ? {
                   ...m,
                   isThinking: false,
+                  isSearching: false,
                   content: m.content + data.token,
                 }
               : m
@@ -286,6 +327,8 @@ export const App: React.FC = () => {
                   id: data.assistant_message_id,
                   isStreaming: false,
                   isThinking: false,
+                  isSearching: false,
+                  sources: data.sources || m.sources,
                   token_count: data.token_count,
                   generation_time: data.generation_time,
                 }
@@ -498,13 +541,15 @@ export const App: React.FC = () => {
 
         {/* Bottom Composer */}
         <Composer
-          onSendMessage={(msg, atts) => handleSendMessage(msg, atts)}
+          onSendMessage={(msg, atts, uploaded) => handleSendMessage(msg, atts, uploaded)}
           onStopGeneration={handleStopGeneration}
           isGenerating={isGenerating}
           selectedModel={selectedModel}
           models={models}
           onSelectModel={setSelectedModel}
           enterToSend={settings.enterToSend}
+          webSearchEnabled={webSearchEnabled}
+          onToggleWebSearch={handleToggleWebSearch}
         />
       </main>
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, Paperclip, AlertTriangle, Loader2 } from 'lucide-react';
+import { Send, Square, Paperclip, AlertTriangle, Loader2, Globe } from 'lucide-react';
 import { uploadService } from '../../services/uploadService';
 import { AttachmentUploadResult } from '../../types/chat';
 import { ImageAttachmentPreview } from './ImageAttachmentPreview';
@@ -13,6 +13,8 @@ interface ComposerProps {
   models: ModelInfo[];
   onSelectModel: (modelId: string) => void;
   enterToSend?: boolean;
+  webSearchEnabled?: boolean;
+  onToggleWebSearch?: (enabled: boolean) => void;
 }
 
 export const Composer: React.FC<ComposerProps> = ({
@@ -23,6 +25,8 @@ export const Composer: React.FC<ComposerProps> = ({
   models,
   onSelectModel,
   enterToSend = true,
+  webSearchEnabled = false,
+  onToggleWebSearch,
 }) => {
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<AttachmentUploadResult[]>([]);
@@ -155,6 +159,32 @@ export const Composer: React.FC<ComposerProps> = ({
             }
           </button>
           <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleFileChange} />
+
+          {/* Web Search Toggle Button */}
+          <button
+            type="button"
+            onClick={() => onToggleWebSearch?.(!webSearchEnabled)}
+            className={`
+              shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 select-none border mb-0.5
+              ${webSearchEnabled
+                ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border-sky-300/80 dark:border-sky-800 shadow-2xs hover:bg-sky-100/60'
+                : 'text-slate-400 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80'
+              }
+            `}
+            title={
+              webSearchEnabled
+                ? 'Web Search is ON: VickyAI will search the web for up-to-date information'
+                : 'Web Search is OFF: Click to enable real-time web search'
+            }
+          >
+            <Globe className={`w-4 h-4 shrink-0 transition-transform ${webSearchEnabled ? 'text-sky-500 scale-105' : ''}`} />
+            <span className="hidden sm:inline text-[11px] font-semibold">
+              {webSearchEnabled ? 'Search ON' : 'Search'}
+            </span>
+            {webSearchEnabled && (
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+            )}
+          </button>
 
           {/* Textarea */}
           <textarea

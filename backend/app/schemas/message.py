@@ -20,6 +20,7 @@ class MessageResponse(BaseModel):
     model: Optional[str] = None
     token_count: Optional[int] = None
     generation_time: Optional[float] = None
+    sources: Optional[List[dict]] = None
     created_at: datetime
     updated_at: datetime
     attachments: List[AttachmentResponse] = []

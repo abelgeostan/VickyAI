@@ -1,4 +1,5 @@
 import { getAuthToken } from './api';
+import { WebSearchSource } from '../types/chat';
 
 export interface StreamChatParams {
   conversationId?: string;
@@ -6,6 +7,7 @@ export interface StreamChatParams {
   model: string;
   attachmentIds?: string[];
   regenerateMessageId?: string;
+  webSearch?: boolean;
   signal?: AbortSignal;
   onStart?: (data: {
     conversation_id: string;
@@ -13,6 +15,8 @@ export interface StreamChatParams {
     assistant_message_id: string;
     model: string;
   }) => void;
+  onSearchStart?: (data: { query: string }) => void;
+  onSearchComplete?: (data: { query: string; sources: WebSearchSource[] }) => void;
   onReasoning?: (data: { status: string; token: string }) => void;
   onToken?: (data: { token: string }) => void;
   onComplete?: (data: {
@@ -21,6 +25,7 @@ export interface StreamChatParams {
     title: string;
     token_count?: number;
     generation_time?: number;
+    sources?: WebSearchSource[];
   }) => void;
   onError?: (error: string, code?: string) => void;
   onCancelled?: () => void;
@@ -44,6 +49,7 @@ export const chatService = {
       model: params.model,
       attachment_ids: params.attachmentIds || [],
       regenerate_message_id: params.regenerateMessageId,
+      web_search: !!params.webSearch,
     };
 
     const response = await fetch('/api/chat/stream', {
@@ -106,6 +112,12 @@ export const chatService = {
             switch (eventType) {
               case 'start':
                 params.onStart?.(parsed);
+                break;
+              case 'search_start':
+                params.onSearchStart?.(parsed);
+                break;
+              case 'search_complete':
+                params.onSearchComplete?.(parsed);
                 break;
               case 'reasoning':
                 params.onReasoning?.(parsed);

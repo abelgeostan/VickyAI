@@ -37,3 +37,9 @@ async def init_db() -> None:
     async with engine.begin() as conn:
         # Tables will be managed through Alembic or created if needed
         await conn.run_sync(Base.metadata.create_all)
+        # Ensure sources column exists on messages table
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS sources JSONB;"))
+        except Exception:
+            pass

@@ -1,6 +1,6 @@
 import os
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "production"
     PORT: int = 8000
     CORS_ORIGINS: List[str] = ["*"]
+
+    # Web Search Configuration
+    SEARCH_PROVIDER: str = "duckduckgo"  # 'duckduckgo', 'tavily', 'brave', 'searxng'
+    SEARCH_MAX_RESULTS: int = 5
+    TAVILY_API_KEY: Optional[str] = None
+    BRAVE_API_KEY: Optional[str] = None
+    SEARXNG_BASE_URL: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

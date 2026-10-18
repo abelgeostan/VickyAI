@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Copy, Check, RotateCw, Edit3, User as UserIcon, Brain, AlertCircle, Sparkles, ChevronDown } from 'lucide-react';
+import { Copy, Check, RotateCw, Edit3, User as UserIcon, Brain, AlertCircle, Sparkles, ChevronDown, Globe, ExternalLink, Loader2 } from 'lucide-react';
 import { Message } from '../../types/chat';
 import { VickyAvatar } from '../vicky/VickyAvatar';
 import { CodeBlock } from './CodeBlock';
@@ -118,6 +118,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               </span>
             )}
 
+            {isAssistant && message.sources && message.sources.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center gap-1">
+                <Globe className="w-2.5 h-2.5" />
+                Web Search
+              </span>
+            )}
+
             {showTimestamp && (
               <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
                 {formattedTime}
@@ -137,6 +144,71 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                 />
               ))}
             </div>
+          )}
+
+          {/* Live Web Searching Status Banner */}
+          {message.isSearching && (
+            <div className="my-2.5 px-3.5 py-2.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200/80 dark:border-sky-800/60 text-sky-700 dark:text-sky-300 text-xs flex items-center gap-2 animate-pulse shadow-2xs">
+              <Loader2 className="w-4 h-4 animate-spin text-sky-500 shrink-0" />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-semibold">Searching the web</span>
+                {message.searchQuery && (
+                  <span className="text-sky-600 dark:text-sky-400 truncate max-w-xs font-mono text-[11px]">
+                    "{message.searchQuery}"
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Web Sources & Citations Section */}
+          {message.sources && message.sources.length > 0 && (
+            <details className="my-2.5 rounded-2xl bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-900/40 text-xs overflow-hidden group/sources shadow-2xs" open>
+              <summary className="cursor-pointer font-semibold p-2.5 select-none text-sky-700 dark:text-sky-300 flex items-center justify-between hover:bg-sky-100/40 dark:hover:bg-sky-900/30 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                  <span>Web Sources ({message.sources.length})</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-sky-500 transition-transform group-open/sources:rotate-180" />
+              </summary>
+              <div className="p-3 pt-1 border-t border-sky-100 dark:border-sky-900/40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {message.sources.map((src, idx) => {
+                    let domain = '';
+                    try {
+                      domain = new URL(src.url).hostname.replace(/^www\./, '');
+                    } catch {
+                      domain = src.url;
+                    }
+                    return (
+                      <a
+                        key={idx}
+                        href={src.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-xs transition-all group/source text-left no-underline"
+                      >
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-mono mb-1">
+                          <span className="w-4 h-4 rounded-full bg-sky-100 dark:bg-sky-900/70 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold text-[9px] shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{domain}</span>
+                          <ExternalLink className="w-3 h-3 ml-auto opacity-0 group-hover/source:opacity-100 transition-opacity text-sky-500 shrink-0" />
+                        </div>
+                        <span className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-1 group-hover/source:text-sky-600 dark:group-hover/source:text-sky-400">
+                          {src.title || src.url}
+                        </span>
+                        {src.snippet && (
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-1 leading-snug">
+                            {src.snippet}
+                          </span>
+                        )}
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            </details>
           )}
 
           {/* Thinking / Reasoning Accordion (Qwen 3 thinking tokens) */}

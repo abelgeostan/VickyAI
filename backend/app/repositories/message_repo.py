@@ -40,6 +40,7 @@ class MessageRepository:
         model: Optional[str] = None,
         token_count: Optional[int] = None,
         generation_time: Optional[float] = None,
+        sources: Optional[list] = None,
     ) -> Message:
         msg = Message(
             conversation_id=conversation_id,
@@ -48,6 +49,7 @@ class MessageRepository:
             model=model,
             token_count=token_count,
             generation_time=generation_time,
+            sources=sources,
         )
         self.db.add(msg)
         await self.db.commit()

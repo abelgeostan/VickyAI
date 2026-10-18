@@ -10,6 +10,7 @@ class ChatStreamRequest(BaseModel):
     model: Optional[str] = None
     attachment_ids: Optional[List[uuid.UUID]] = []
     regenerate_message_id: Optional[uuid.UUID] = None
+    web_search: bool = False
 
 
 class ChatNonStreamResponse(BaseModel):
