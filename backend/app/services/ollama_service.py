@@ -45,6 +45,7 @@ class OllamaService:
         model: str,
         messages: List[Dict[str, Any]],
         system_prompt: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Perform non-streaming chat with Ollama."""
         full_messages = []
@@ -52,11 +53,13 @@ class OllamaService:
             full_messages.append({"role": "system", "content": system_prompt})
         full_messages.extend(messages)
 
-        payload = {
+        payload: Dict[str, Any] = {
             "model": model,
             "messages": full_messages,
             "stream": False,
         }
+        if tools:
+            payload["tools"] = tools
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             res = await client.post(f"{self.base_url}/api/chat", json=payload)
@@ -68,6 +71,7 @@ class OllamaService:
         model: str,
         messages: List[Dict[str, Any]],
         system_prompt: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Stream chat tokens from Ollama using NDJSON.
@@ -81,11 +85,13 @@ class OllamaService:
             full_messages.append({"role": "system", "content": system_prompt})
         full_messages.extend(messages)
 
-        payload = {
+        payload: Dict[str, Any] = {
             "model": model,
             "messages": full_messages,
             "stream": True,
         }
+        if tools:
+            payload["tools"] = tools
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             async with client.stream(
