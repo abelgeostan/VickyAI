@@ -24,6 +24,7 @@ from app.repositories.conversation_repo import ConversationRepository
 from app.repositories.message_repo import MessageRepository
 from app.ai.router import ModelRouter
 from app.services.search import web_search_service
+from app.services.temporal_service import build_effective_system_prompt, get_temporal_context
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger("vickyai.chat")
@@ -206,7 +207,7 @@ async def chat_stream(
         token_count = 0
         assistant_msg_id = uuid.uuid4()
         sources_data = None
-        effective_system_prompt = VICKY_SYSTEM_PROMPT
+        search_prompt_context = None
 
         # Emit start event
         yield f"event: start\ndata: {json.dumps({'conversation_id': str(conv.id), 'user_message_id': str(user_msg.id), 'assistant_message_id': str(assistant_msg_id), 'model': active_model})}\n\n"
@@ -222,12 +223,18 @@ async def chat_stream(
                         for r in search_results
                     ]
                 yield f"event: search_complete\ndata: {json.dumps({'query': user_prompt, 'sources': sources_data or []})}\n\n"
-                effective_system_prompt = VICKY_SYSTEM_PROMPT + web_search_service.build_search_prompt_context(
+                search_prompt_context = web_search_service.build_search_prompt_context(
                     user_prompt, search_results
                 )
             except Exception as se:
                 logger.error(f"Web search error in stream: {se}")
                 yield f"event: search_complete\ndata: {json.dumps({'query': user_prompt, 'sources': []})}\n\n"
+
+        # Dynamically inject real-time temporal context & web search grounding
+        effective_system_prompt = build_effective_system_prompt(
+            base_prompt=VICKY_SYSTEM_PROMPT,
+            web_search_context=search_prompt_context,
+        )
 
         try:
             async for chunk in ollama_service.stream_chat(
@@ -346,7 +353,7 @@ async def chat_non_stream(
     )
 
     sources_data = None
-    effective_system_prompt = VICKY_SYSTEM_PROMPT
+    search_prompt_context = None
 
     if req.web_search and req.message:
         try:
@@ -356,11 +363,16 @@ async def chat_non_stream(
                     {"title": r.title, "url": r.url, "snippet": r.snippet}
                     for r in search_results
                 ]
-            effective_system_prompt = VICKY_SYSTEM_PROMPT + web_search_service.build_search_prompt_context(
+            search_prompt_context = web_search_service.build_search_prompt_context(
                 req.message, search_results
             )
         except Exception as e:
             logger.error(f"Web search error in non-stream: {e}")
+
+    effective_system_prompt = build_effective_system_prompt(
+        base_prompt=VICKY_SYSTEM_PROMPT,
+        web_search_context=search_prompt_context,
+    )
 
     t0 = time.time()
     try:

@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     PORT: int = 8000
     CORS_ORIGINS: List[str] = ["*"]
 
+    # Temporal / Timezone Configuration (Optional, auto-detects if omitted)
+    TIMEZONE: Optional[str] = None
+
     # Web Search Configuration
     SEARCH_PROVIDER: str = "duckduckgo"  # 'duckduckgo', 'tavily', 'brave', 'searxng'
     SEARCH_MAX_RESULTS: int = 5
